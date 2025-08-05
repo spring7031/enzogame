@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>豬豬西行：P2P Full Game</title>
+  <style>
+    body { font-family: sans-serif; background: #111; color: #fff; text-align: center; }
+    .hidden { display: none; }
+    .room-id { font-size: 24px; margin: 10px; color: yellow; }
+    .character-box { display: inline-block; margin: 10px; padding: 10px; border: 1px solid #fff; cursor: pointer; background: #333; }
+    .character-box.selected { background: #555; }
+    .player-status { margin-top: 20px; }
+    button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+  </style>
+</head>
+<body>
+  <div id="connectPhase">
+    <h1>建立或加入房間</h1>
+    <input type="text" id="nickname" placeholder="你的暱稱" />
+    <button onclick="createRoom()">建立房間</button>
+    <input type="text" id="joinRoomId" placeholder="輸入房號加入" />
+    <button onclick="joinRoom()">加入房間</button>
+    <div id="roomIdDisplay" class="room-id hidden"></div>
+  </div>
+
+  <div id="selectionPhase" class="hidden">
+    <h2>房間號碼：<span id="roomIdText"></span></h2>
+    <div id="characterSelect">
+      <!-- 四角色框框 -->
+    </div>
+    <div class="player-status" id="statusList"></div>
+    <button id="readyBtn" onclick="toggleReady()">準備</button>
+    <button id="startBtn" class="hidden" onclick="startGame()">開始遊戲</button>
+  </div>
+
+  <script>
+    let isHost = false;
+    let roomId = "";
+    let nickname = "";
+    let selectedChar = null;
+    let readyStatus = {};
+    const characters = ["唐三藏", "沙悟淨", "小智", "豬八戒"];
+
+    function createRoom() {
+      nickname = document.getElementById('nickname').value;
+      if (!nickname) return alert('請輸入暱稱');
+      isHost = true;
+      roomId = Math.random().toString(36).substr(2, 6).toUpperCase();
+      document.getElementById('roomIdDisplay').innerText = '房號：' + roomId;
+      document.getElementById('roomIdDisplay').classList.remove('hidden');
+      document.getElementById('connectPhase').classList.add('hidden');
+      document.getElementById('selectionPhase').classList.remove('hidden');
+      document.getElementById('roomIdText').innerText = roomId;
+      initSelection();
+    }
+
+    function joinRoom() {
+      nickname = document.getElementById('nickname').value;
+      roomId = document.getElementById('joinRoomId').value;
+      if (!nickname || !roomId) return alert('請輸入暱稱與房號');
+      isHost = false;
+      document.getElementById('connectPhase').classList.add('hidden');
+      document.getElementById('selectionPhase').classList.remove('hidden');
+      document.getElementById('roomIdText').innerText = roomId;
+      initSelection();
+    }
+
+    function initSelection() {
+      const container = document.getElementById('characterSelect');
+      container.innerHTML = '';
+      characters.forEach(char => {
+        const div = document.createElement('div');
+        div.className = 'character-box';
+        div.innerText = char;
+        div.onclick = () => selectCharacter(char);
+        container.appendChild(div);
+      });
+    }
+
+    function selectCharacter(char) {
+      selectedChar = char;
+      document.querySelectorAll('.character-box').forEach(e => {
+        e.classList.remove('selected');
+        if (e.innerText === char) e.classList.add('selected');
+      });
+      updateStatus();
+    }
+
+    function toggleReady() {
+      if (!selectedChar) return alert('請先選擇角色');
+      readyStatus[nickname] = { ready: true, char: selectedChar };
+      updateStatus();
+      if (isHost && allReady()) {
+        document.getElementById('startBtn').classList.remove('hidden');
+      }
+    }
+
+    function updateStatus() {
+      const statusList = document.getElementById('statusList');
+      statusList.innerHTML = '';
+      for (let name in readyStatus) {
+        const status = readyStatus[name];
+        const p = document.createElement('p');
+        p.innerText = `${name} 選擇「${status.char}」 - ${status.ready ? '已準備' : '未準備'}`;
+        statusList.appendChild(p);
+      }
+    }
+
+    function allReady() {
+      return Object.values(readyStatus).length === characters.length &&
+             Object.values(readyStatus).every(p => p.ready);
+    }
+
+    function startGame() {
+      alert('遊戲開始！');
+      // 切換到 Canvas 遊戲畫面或載入 main.js 遊戲邏輯...
+    }
+  </script>
+</body>
+</html>
